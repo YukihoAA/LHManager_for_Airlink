@@ -40,4 +40,5 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3
       with:
+        name: OculusKiller-Update
         path: 'OculusKiller/bin/x64/Debug'
