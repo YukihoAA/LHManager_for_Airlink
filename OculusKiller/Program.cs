@@ -52,7 +52,7 @@ namespace OculusKiller
                     }
 
                     // Don't give the user an error if the process isn't found, it happens often...
-                    Process vrServerProcess = Array.Find(Process.GetProcessesByName("vrserver"), process => process.MainModule.FileName == vrServerPath);
+                    Process vrServerProcess = Array.Find(Process.GetProcessesByName("vrmonitor"), process => process.MainModule.FileName == vrServerPath);
                     if (vrServerProcess == null)
                         continue;
                     vrServerProcess.WaitForExit();
@@ -126,7 +126,7 @@ namespace OculusKiller
 
                 string location = openvrPaths["runtime"][0].ToString();
                 string startupPath = Path.Combine(location, @"bin\win64\vrstartup.exe");
-                string serverPath = Path.Combine(location, @"bin\win64\vrserver.exe");
+                string serverPath = Path.Combine(location, @"bin\win64\vrmonitor.exe");
 
                 if (!File.Exists(startupPath))
                 {
