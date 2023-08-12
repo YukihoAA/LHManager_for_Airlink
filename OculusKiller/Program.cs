@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 using System.Web.Script.Serialization;
+using System.Windows.Forms;
 
 namespace OculusKiller
 {
@@ -20,8 +20,27 @@ namespace OculusKiller
                 }
                 string startupPath = result.Item1;
                 string vrServerPath = result.Item2;
+                string lhManagerPath = @"C:\\Program Files\\LHManager\\lighthouse-v2-manager.exe";
+                string[] macList = { @"E3:E7:D2:B5:9B:EB", @"CB:95:59:69:43:62", @"FD:F4:68:BA:D3:7A", @"F0:DD:40:1F:01:C4" };
+                bool lhAvailable = File.Exists(lhManagerPath) && macList.Length > 0;
+
+
+                Process[] ps = new Process[macList.Length];
+                if (lhAvailable)
+                {
+                    for (int i = 0; i < macList.Length; i++)
+                    {
+                        ps[i] = Process.Start(lhManagerPath, @"on " + macList[i]);
+
+                    }
+                }
 
                 Process.Start(startupPath).WaitForExit();
+
+                foreach (Process p in ps)
+                {
+                    p?.WaitForExit();
+                }
 
                 Stopwatch sw = Stopwatch.StartNew();
                 while (true)
@@ -38,6 +57,15 @@ namespace OculusKiller
                         continue;
                     vrServerProcess.WaitForExit();
 
+                    if (lhAvailable)
+                    {
+                        for (int i = 0; i < macList.Length; i++)
+                        {
+                            ps[i] = Process.Start(lhManagerPath, @"off " + macList[i]);
+
+                        }
+                    }
+
                     // No-one would ever use the name "OVRServer_x64" but let's just be safe...
                     Process ovrServerProcess = Array.Find(Process.GetProcessesByName("OVRServer_x64"), process => process.MainModule.FileName == oculusPath);
                     if (ovrServerProcess == null)
@@ -48,6 +76,11 @@ namespace OculusKiller
 
                     ovrServerProcess.Kill();
                     ovrServerProcess.WaitForExit();
+
+                    foreach (Process p in ps)
+                    {
+                        p?.WaitForExit();
+                    }
                     break;
                 }
             }
