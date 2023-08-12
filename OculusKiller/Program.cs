@@ -20,7 +20,18 @@ namespace OculusKiller
                     dynamic steamVrPath = jss.DeserializeObject(jsonString);
 
                     string vrStartupPath = Path.Combine(steamVrPath["runtime"][0].ToString(), @"bin\win64\vrstartup.exe");
-                    if (File.Exists(vrStartupPath))
+                    string lhManagerPath = @"C:\\Program Files\\LHManager\\lighthouse-v2-manager.exe";
+                    if (File.Exists(vrStartupPath) && File.Exists(lhManagerPath))
+                    {
+                        Process lhON = Process.Start(lhManagerPath, @"on E3:E7:D2:B5:9B:EB CB:95:59:69:43:62 FD:F4:68:BA:D3:7A F0:DD:40:1F:01:C4"), lhOFF=null;
+                        Process vrStartupProcess = Process.Start(vrStartupPath);
+                        lhON.WaitForExit();
+                        vrStartupProcess.WaitForExit();
+                        lhOFF = Process.Start(lhManagerPath, @"off E3:E7:D2:B5:9B:EB CB:95:59:69:43:62 FD:F4:68:BA:D3:7A F0:DD:40:1F:01:C4");
+                        lhOFF.WaitForExit();
+
+                    }
+                    else if(File.Exists(vrStartupPath))
                     {
                         Process vrStartupProcess = Process.Start(vrStartupPath);
                         vrStartupProcess.WaitForExit();
