@@ -8,7 +8,7 @@ namespace OculusKiller
 {
     public class Program
     {
-        static readonly string[] macList = { @"E3:E7:D2:B5:9B:EB", @"CB:95:59:69:43:62", @"FD:F4:68:BA:D3:7A", @"F0:DD:40:1F:01:C4" };
+        static readonly string[] macList = { @"AA:BB:CC:DD:EE:FF", @"AA:BB:CC:DD:EE:FF"};
         static readonly string lhManagerPath = @"C:\\Program Files\\LHManager\\lighthouse-v2-manager.exe";
         static readonly bool lhAvailable = File.Exists(lhManagerPath) && macList.Length > 0;
         public static void Main()
