@@ -8,6 +8,9 @@ namespace OculusKiller
 {
     public class Program
     {
+        static readonly string[] macList = { @"E3:E7:D2:B5:9B:EB", @"CB:95:59:69:43:62", @"FD:F4:68:BA:D3:7A", @"F0:DD:40:1F:01:C4" };
+        static readonly string lhManagerPath = @"C:\\Program Files\\LHManager\\lighthouse-v2-manager.exe";
+        static readonly bool lhAvailable = File.Exists(lhManagerPath) && macList.Length > 0;
         public static void Main()
         {
             try
@@ -20,73 +23,82 @@ namespace OculusKiller
                 }
                 string startupPath = result.Item1;
                 string vrServerPath = result.Item2;
-                string lhManagerPath = @"C:\\Program Files\\LHManager\\lighthouse-v2-manager.exe";
-                string[] macList = { @"E3:E7:D2:B5:9B:EB", @"CB:95:59:69:43:62", @"FD:F4:68:BA:D3:7A", @"F0:DD:40:1F:01:C4" };
-                bool lhAvailable = File.Exists(lhManagerPath) && macList.Length > 0;
+                string oculusDashPath = oculusPath.Replace(@"oculus-runtime\OVRServer_x64", @"oculus-dash\dash\bin\OculusDash1");
 
-
-                Process[] ps = new Process[macList.Length];
-                if (lhAvailable)
+                if (!File.Exists(oculusDashPath))
                 {
-                    for (int i = 0; i < macList.Length; i++)
-                    {
-                        ps[i] = Process.Start(lhManagerPath, @"on " + macList[i]);
-
-                    }
+                    MessageBox.Show("Oculus dash executable not found...");
+                    return;
                 }
 
-                Process.Start(startupPath).WaitForExit();
-
-                foreach (Process p in ps)
+                // prevent from duplicate excute
+                if (Process.GetProcessesByName("OculusDash").Length > 1 || Process.GetProcessesByName("OculusDash1").Length > 1 || Process.GetProcessesByName("lighthouse-v2-manager").Length >= 1)
                 {
-                    p?.WaitForExit();
+                    System.Threading.Thread.Sleep(2000);
+                    return;
                 }
+
+                Process dashPS = Process.Start(oculusDashPath);
+
+                LightHouseToggle("on");
 
                 Stopwatch sw = Stopwatch.StartNew();
                 while (true)
                 {
-                    if (sw.ElapsedMilliseconds >= 10000)
+                    if (sw.ElapsedMilliseconds >= 100000)
                     {
-                        MessageBox.Show("SteamVR vrserver not found... (Did SteamVR crash?)");
+                        MessageBox.Show("SteamVR vrserver not found... (Did you lunched SteamVR?)");
                         return;
                     }
 
                     // Don't give the user an error if the process isn't found, it happens often...
                     Process vrServerProcess = Array.Find(Process.GetProcessesByName("vrmonitor"), process => process.MainModule.FileName == vrServerPath);
                     if (vrServerProcess == null)
+                    {
+                        System.Threading.Thread.Sleep(200);
                         continue;
+                    }
+                    else
+                        sw.Stop();
                     vrServerProcess.WaitForExit();
 
-                    if (lhAvailable)
+                    Process[] vrcftProcess = Process.GetProcessesByName("VRCFaceTracking");
+                    if (vrcftProcess != null && vrcftProcess.Length > 0)
                     {
-                        for (int i = 0; i < macList.Length; i++)
-                        {
-                            ps[i] = Process.Start(lhManagerPath, @"off " + macList[i]);
-
-                        }
+                        vrcftProcess[0].CloseMainWindow();
+                        vrcftProcess[0].WaitForExit();
                     }
-
-                    // No-one would ever use the name "OVRServer_x64" but let's just be safe...
-                    Process ovrServerProcess = Array.Find(Process.GetProcessesByName("OVRServer_x64"), process => process.MainModule.FileName == oculusPath);
-                    if (ovrServerProcess == null)
-                    {
-                        MessageBox.Show("Oculus runtime not found...");
-                        return;
-                    }
-
-                    ovrServerProcess.Kill();
-                    ovrServerProcess.WaitForExit();
-
-                    foreach (Process p in ps)
-                    {
-                        p?.WaitForExit();
-                    }
-                    break;
+                    LightHouseToggle("off");
+                    dashPS.WaitForExit();
+                    System.Threading.Thread.Sleep(15000);
+                    return;
                 }
             }
             catch (Exception e)
             {
                 MessageBox.Show($"An exception occured while attempting to find/start SteamVR...\n\nMessage: {e}");
+            }
+        }
+
+        static void LightHouseToggle(String command)
+        {
+            Process[] ps = new Process[macList.Length];
+
+            if (!(command == "on" || command == "off"))
+                return;
+
+            if (lhAvailable)
+            {
+                for (int i = 0; i < macList.Length; i++)
+                {
+                    ps[i] = Process.Start(lhManagerPath, command + @" " + macList[i]);
+
+                }
+            }
+
+            foreach (Process p in ps)
+            {
+                p?.WaitForExit();
             }
         }
 
